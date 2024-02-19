@@ -41,12 +41,7 @@ cov_plot <- cov_tibble_fct |>
     )
   ) +
   geom_text(
-    aes(label = round(cor, 2)), 
-    # color = ifelse(
-    #   abs(cov_tibble_fct$cor) > 0.6,
-    #   "grey90",
-    #   "grey10"
-    # )
+    aes(label = round(cor, 2)),
     color = ifelse(
       cov_tibble_fct$p_value >= 0.05,
       onsv_palette$red,
