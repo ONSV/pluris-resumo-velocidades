@@ -1,6 +1,3 @@
-
-
-
 group_medias <- function(tbl_bairros) {
   tbl_medias <- tbl_bairros |> 
     select(-bairro) |> 

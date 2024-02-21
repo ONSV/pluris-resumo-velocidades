@@ -2,7 +2,7 @@ calc_correlacao <- function(tbl_bairros) {
   cov_matrix <- tbl_bairros |> 
     select(-bairro) |> 
     cor(method = "spearman")
-  
+
   rcorr_matrix <- tbl_bairros |> 
     select(-bairro) |> 
     as.matrix() |> 
