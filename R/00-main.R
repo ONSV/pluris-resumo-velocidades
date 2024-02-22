@@ -8,6 +8,7 @@ library(readxl)
 library(sf)
 library(patchwork)
 library(arrow)
+library(osmdata)
 
 source("R/01-correlacao.R")
 source("R/02-wilcox.R")

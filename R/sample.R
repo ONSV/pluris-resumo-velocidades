@@ -1,26 +1,3 @@
-ndsbr_path <- "data/ndsbr_sample.parquet"
-
-ndsbr <- open_dataset(ndsbr_path)
-
-ndsbr_time <- ndsbr |> 
-  collect() |> 
-  mutate(
-    id = paste0(driver, trip),
-    s = if_else(
-      id == lag(id),
-      time_length(time) - time_length(lag(time)),
-      1
-    )
-  ) |> 
-  filter(s > 0) |> 
-  replace_na(list(s = 1))
-
-tempo_bairros <- ndsbr_time |> 
-  group_by(neighbhd) |> 
-  summarise(s = sum(s)) |>
-  rename(bairro = neighbhd) |> 
-  filter(bairro != "NPI")
-
 bairros_sf_path <- "data/DIVISA_DE_BAIRROS.shp"
 semaforos_path <- "data/traffic_lights.shp"
 radares_path <- "data/speed_traps.shp"
@@ -42,26 +19,39 @@ qnt_radares <- st_join(radares, divisa_bairros) |>
   summarise(n = n()) |> 
   st_drop_geometry()
 
-divisa_bairros_count <- divisa_bairros |> 
-  left_join(qnt_semaforos |> rename(n_semaforos = n), by = "NOME") |>
-  left_join(qnt_radares |> rename(n_radares = n), by = "NOME") |>
-  left_join(tempo_bairros, by = c("NOME" = "bairro")) |>
-  select(nome_bairro = NOME, n_semaforos, n_radares, s) |> 
-  replace_na(list(n_semaforos = 0, n_radares = 0, s = 0))
+cwb_limits <- getbb("Curitiba")
 
-bairros_indicadores <- divisa_bairros_count |> 
+cwb_highway <- opq(cwb_limits) |> 
+  add_osm_feature(key = "highway") |> 
+  osmdata_sf()
+
+osm_axis_classes <- c(
+  "trunk", "primary", "secondary", "tertiary", "unclassified", "residential",
+  "motorway", "motorway_link", "trunk_link", "primary_link", "secondary_link",
+  "tertiary_link"
+)
+
+cwb_axis <- cwb_highway$osm_lines |> 
+  select(osm_id, name, highway) |> 
+  filter(highway %in% osm_axis_classes) |> 
+  st_transform(31982) |>
+  mutate(dist = st_length(geometry))
+
+cwb_axis <- st_transform(cwb_axis, 4674)
+
+axis_dist_bairros <- st_join(cwb_axis, divisa_bairros) |> 
+  group_by(NOME) |> 
+  summarise(dist = sum(dist)) |> 
+  st_drop_geometry() |> 
+  drop_na()
+
+divisa_bairros_var <- divisa_bairros |> 
+  left_join(qnt_semaforos |> rename(n_semaforos = n), by = c("NOME")) |> 
+  left_join(qnt_radares |> rename(n_radares = n), by = c("NOME")) |> 
+  left_join(axis_dist_bairros, by = c("NOME")) |> 
+  select(NOME, n_semaforos, n_radares, dist) |> 
+  replace_na(list(n_semaforos = 0, n_radares = 0, dist = 0)) |> 
   mutate(
-    i1 = if_else(
-      n_semaforos == 0 | s == 0,
-      0,
-      n_semaforos / s * 60
-    ),
-    i2 = if_else(
-      n_radares == 0 | s == 0,
-      0,
-      n_radares / s * 60
-    )
+    ind_semaforos = units::drop_units(n_semaforos / dist * 1000),
+    ind_radares = units::drop_units(n_radares / dist * 1000)
   )
-
-ggplot() +
-  geom_sf(data = bairros_indicadores, aes(fill = i2))
