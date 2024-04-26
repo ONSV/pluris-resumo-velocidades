@@ -9,10 +9,12 @@ library(sf)
 library(patchwork)
 library(arrow)
 library(osmdata)
+library(gt)
 
 source("R/01-sample.R")
 source("R/02-correlacao.R")
 source("R/03-wilcox.R")
+source("R/04_table.R")
 
 calc_sample <- function() {
   dados_bairros <- 
@@ -33,8 +35,6 @@ calc_sample <- function() {
   )
   return(dados_bairros)
 }
-
-
 
 calc_corr <- function(dados_bairros) {
   cov_tibble <- calc_correlacao(dados_bairros)
@@ -67,7 +67,8 @@ main <- function() {
   dados_bairros <- calc_sample()
   calc_correlacao(dados_bairros)
   calc_wil(dados_bairros)
-  st_write(dados_bairros, "data/dados_bairros.geojson")
+  st_write(dados_bairros, "data/dados_bairros.geojson", append = FALSE)
+  make_sample_table()
 }
 
 main()

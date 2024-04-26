@@ -1,0 +1,8 @@
+- V1: Percentual do tempo percorrido acima de 40 km/h
+- V2: Percentual do tempo percorrido acima de 50 km/h
+- V3: Percentual do tempo percorrido acima de 60 km/h
+- P1: Percentual do tempo percorrido sob asfalto, bloco ou concreto
+- P2: Percentual do tempo percorrido sob pavimento alternativo, asfalto, bloco e concreto
+- R1: 	Percentual de domicílios com renda maior que 2 salários mínimos
+- R2: Percentual de domicílios com renda maior que 3 salários mínimos
+- R3: Percentual de domicílios com renda maior que 5 salários mínimos
